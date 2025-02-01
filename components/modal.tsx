@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   View,
@@ -7,10 +7,31 @@ import {
   StyleSheet,
   Image,
 } from "react-native";
+import DropDownPicker from "react-native-dropdown-picker";
 
 const CustomModal = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState("option1");
+  const [options, setOptions] = useState<{ label: string; value: string }[]>(
+    []
+  );
+  // select
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+
+  useEffect(() => {
+    fetch(
+      "https://wisemed-interview.s3.us-east-2.amazonaws.com/react-native/emergency-kinds.json"
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        const formattedOptions = data.emergencyKinds.map((kind) => ({
+          label: kind.name,
+          value: kind.id,
+        }));
+        setOptions(formattedOptions);
+      })
+      .catch((error) => console.error("Error fetching options:", error));
+  }, []);
 
   const toggleModal = () => {
     setIsOpen(!isOpen);
@@ -27,7 +48,7 @@ const CustomModal = () => {
         animationType="slide"
         onRequestClose={toggleModal}
       >
-        <View style={styles.modalOverlay}>
+        <TouchableOpacity onPress={toggleModal} style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.headerTextContainer}>
@@ -83,16 +104,43 @@ const CustomModal = () => {
                   <Text style={styles.specContent}>2</Text>
                 </View>
               </View>
-              <View style={styles.iconRow}></View>
+              <View style={styles.iconRow}>
+                <Image
+                  source={require("../assets/icons/heart.png")}
+                  style={styles.icon}
+                />
+                <Image
+                  source={require("../assets/icons/blood.png")}
+                  style={styles.icon}
+                />
+              </View>
               <View style={styles.selectorRow}>
-                <Text>Tipo de urgencia:</Text>
+                <Text
+                  style={[
+                    styles.titleWithIcon,
+                    {
+                      alignSelf: "flex-start",
+                      color: "#154FBF",
+                      fontSize: 16,
+                      backgroundColor: "white",
+                    },
+                  ]}
+                >
+                  Tipo de urgencia:
+                </Text>
+                <DropDownPicker
+                  open={open}
+                  value={value}
+                  items={options}
+                  setOpen={setOpen}
+                  setValue={setValue}
+                  setItems={setOptions}
+                  placeholder="Seleccionar"
+                />
               </View>
             </View>
-            {/* <TouchableOpacity onPress={toggleModal} style={styles.closeButton}>
-              <Text style={styles.buttonText}>Close</Text>
-            </TouchableOpacity> */}
           </View>
-        </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -105,7 +153,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   openButton: {
-    backgroundColor: "blue",
+    backgroundColor: "#154FBF",
     padding: 10,
     borderRadius: 5,
   },
@@ -159,8 +207,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   icon: {
-    width: 20,
-    height: 20,
+    width: 30,
+    height: 30,
     marginRight: 10,
   },
   titleText: {
@@ -171,7 +219,7 @@ const styles = StyleSheet.create({
   },
   iconRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "flex-start",
     width: "100%",
     marginVertical: 20,
   },
@@ -194,11 +242,15 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   specLabel: {
-    color: "blue",
+    color: "#154FBF",
     marginRight: 5,
   },
   specContent: {
     color: "black",
+  },
+  selectorContainer: {
+    width: "100%",
+    alignItems: "center",
   },
 });
 
